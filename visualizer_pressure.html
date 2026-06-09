@@ -1,27 +1,34 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MelodyLab v5.70 - Pressure Wave Match Longitudinal</title><meta name="description" content="MelodyLab ห้องทดลองเสียงและเก็บข้อมูล ด้วยมือถือ"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"><meta name="melodylab-build-version" content="v5.70-pressure-wave-match-longitudinal"></head><body class="detailPage page-visualizer"><header><div class="wrap nav detailNav"><button class="backBtn" onclick="location.href='visualizer.html'">←</button><a class="brand" href="index.html"><img src="icon-192.png" alt="MelodyLab"><span>Pressure Wave (คลื่นความดัน)</span></a></div></header><main class="wrap detailMain" data-current="visualizer">
-<section class="section activeDetail visualizerSinglePage visualizerTemplatePage pressureFocusPage" id="visualizer" data-viz-mode="pressure">
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MelodyLab v5.73 - Param Symbols f A</title><meta name="description" content="MelodyLab ห้องทดลองเสียงและเก็บข้อมูล ด้วยมือถือ"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"><meta name="melodylab-build-version" content="v5.73-param-symbols-f-a">
+</head><body class="detailPage page-visualizer"><header><div class="wrap nav detailNav"><button class="backBtn" onclick="location.href=\'visualizer.html\'">←</button><a class="brand" href="index.html"><img src="icon-192.png" alt="MelodyLab"><span>Pressure Wave (คลื่นความดัน)</span></a></div></header><main class="wrap detailMain" data-current="visualizer">
+<section class="section activeDetail visualizerSinglePage visualizerTemplatePage longitudinalFocusPage" id="visualizer" data-viz-mode="pressure">
   <div class="sectionHead templateHead">
     <div>
       <h2>Pressure Wave (คลื่นความดัน)</h2>
-      <p class="sectionLead">ภาพจำลองหลักสำหรับสังเกตการกระจายตัวของอนุภาคอากาศและกราฟความดัน</p>
+      <p class="sectionLead">ภาพจำลองหลักสำหรับสังเกตการอัดแน่น-เบาบางของอนุภาคอากาศและกราฟความดัน</p>
     </div>
   </div>
 
   <div class="visualizerTemplateGrid longitudinalFocusGrid">
     <div class="card mainViz templateMainViz longitudinalMainViz">
       <div class="vizMediaFrame">
-        <div class="vizSingleModeLabel"><span>🔵</span> Pressure Wave (คลื่นความดัน)</div>
+        <div class="vizSingleModeLabel"><span>〰️</span> Pressure Wave (คลื่นความดัน)</div>
         <canvas id="visualizerCanvas" width="1200" height="440"></canvas>
         <div class="vizPlayerBar embeddedPlayerBar" aria-label="ปุ่มควบคุมภาพจำลอง">
           <div class="playerCluster playerCenter playerCenterOnly">
             <button id="vizPlayBtn" class="playerBtn playerPrimary playerPlay" title="เล่น" aria-label="เล่น">
-              <span class="playerGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M8 6.5v11l9-5.5-9-5.5z"/></svg></span>
+              <span class="playerGlyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M8 6.5v11l9-5.5-9-5.5z"/></svg>
+              </span>
             </button>
             <button id="vizPauseBtn" class="playerBtn playerPause" title="หยุด" aria-label="หยุด">
-              <span class="playerGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="7" y="6" width="3.5" height="12" rx="1.2"/><rect x="13.5" y="6" width="3.5" height="12" rx="1.2"/></svg></span>
+              <span class="playerGlyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="7" y="6" width="3.5" height="12" rx="1.2"/><rect x="13.5" y="6" width="3.5" height="12" rx="1.2"/></svg>
+              </span>
             </button>
             <button id="vizResetBtn" class="playerBtn playerReset" title="รีเซ็ต" aria-label="รีเซ็ต">
-              <span class="playerGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19 12a7 7 0 1 1-2.05-4.95"/><path d="M19 5v5h-5"/></svg></span>
+              <span class="playerGlyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19 12a7 7 0 1 1-2.05-4.95"/><path d="M19 5v5h-5"/></svg>
+              </span>
             </button>
           </div>
         </div>
@@ -31,24 +38,24 @@
         <summary>คำอธิบายเพิ่มเติม</summary>
         <div class="detailsBody">
           <div class="vizConceptStrip compactExplainStrip">
-            <div class="conceptChip"><span class="chipIcon">⇢</span><div><b>ทิศทางการเคลื่อนที่ของคลื่น</b><small>ใช้สังเกตทิศทางการเคลื่อนที่ของคลื่นเสียง</small></div></div>
-            <div class="conceptChip"><span class="chipIcon">●</span><div><b>บริเวณอัดแน่น</b><small>อนุภาคอยู่ชิดกันมาก ความดันสูง</small></div></div>
-            <div class="conceptChip"><span class="chipIcon">○</span><div><b>บริเวณเบาบาง</b><small>อนุภาคอยู่ห่างกันมาก ความดันต่ำ</small></div></div>
-            <div class="conceptChip accent"><span class="chipIcon">∿</span><div><b>กราฟความดัน</b><small>ใช้ดูการเปลี่ยนแปลงความดันตามตำแหน่ง</small></div></div>
+            <div class="conceptChip"><span class="chipIcon">→</span><div><b>Wave propagation (ทิศทางการเคลื่อนที่ของคลื่น)</b><small>คลื่นความดันเคลื่อนที่ไปตามแนว x</small></div></div>
+            <div class="conceptChip"><span class="chipIcon">●</span><div><b>Compression (บริเวณอัดแน่น)</b><small>อนุภาคอยู่ชิดกัน ความดันสูง</small></div></div>
+            <div class="conceptChip"><span class="chipIcon">○</span><div><b>Rarefaction (บริเวณเบาบาง)</b><small>อนุภาคอยู่ห่างกัน ความดันต่ำ</small></div></div>
+            <div class="conceptChip accent"><span class="chipIcon dot"></span><div><b>จุดสังเกต</b><small>จุดแดงด้านบนตรงกับตำแหน่งบนกราฟความดัน</small></div></div>
           </div>
           <div class="templateUnderCanvas explainGrid">
             <div class="templateInsightCard">
               <div class="insightTitle">สิ่งที่สังเกตได้</div>
               <ul>
-                <li>แผนภาพด้านบนใช้แสดงการกระจายตัวของอนุภาคอากาศ</li>
-                <li>บริเวณอัดแน่นสอดคล้องกับความดันสูง และบริเวณเบาบางสอดคล้องกับความดันต่ำ</li>
-                <li>กราฟเส้นด้านล่างใช้แสดงค่าความดันเทียบกับตำแหน่ง</li>
+                <li>กราฟอนุภาคด้านบนใช้รูปแบบเดียวกับ Longitudinal v5.67</li>
+                <li>บริเวณอนุภาคชิดกันแทนความดันสูง และบริเวณอนุภาคห่างกันแทนความดันต่ำ</li>
+                <li>กราฟเส้นด้านล่างแสดงความดัน ΔP เทียบกับตำแหน่ง x</li>
               </ul>
             </div>
             <div class="templateLegendCard">
               <div class="legendRow"><span class="legendDot cyan"></span><span>อนุภาคของตัวกลาง</span></div>
-              <div class="legendRow"><span class="legendDot red"></span><span>จุดอ้างอิงสำหรับสังเกตกราฟความดัน</span></div>
-              <div class="legendRow"><span class="legendMark">│</span><span>แกนความดัน ΔP</span></div>
+              <div class="legendRow"><span class="legendDot red"></span><span>อนุภาคอ้างอิงสำหรับสังเกต</span></div>
+              <div class="legendRow"><span class="legendMark">│</span><span>Equilibrium position (ตำแหน่งสมดุลของอนุภาคอ้างอิง)</span></div>
             </div>
           </div>
         </div>
@@ -59,7 +66,7 @@
       <div class="panelTitleStack"><h3>Parameters (ตัวแปรควบคุม)</h3><p class="panelSubtext">ปรับค่าแล้วสังเกตการเปลี่ยนแปลงของภาพจำลอง</p></div>
 
       <div class="field richField neonParamRow freqRow">
-        <div class="paramIcon">∿</div>
+        <div class="paramIcon">f</div>
         <div class="paramText"><label>ความถี่</label><small>Frequency f</small></div>
         <input id="vizFreq" type="range" min="100" max="1000" step="10" value="440">
         <div class="paramValueWrap"><span id="vizFreqLabel" class="valueBadge">440 Hz</span></div>
@@ -104,4 +111,7 @@
     </div>
   </div>
 </section>
-</main><script src="app.js"></script></body></html>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

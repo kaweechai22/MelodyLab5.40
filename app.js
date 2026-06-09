@@ -685,25 +685,27 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
 
   const xMin = Math.max(158, w * 0.155);
   const xMax = w - 76;
-  const eqX = w * 0.555;
+  const obsXBase = w * 0.555;
   const phase = vizState.t * 0.105 * p.speed;
-  const k = 2 * Math.PI / 265;
+  const k = 2 * Math.PI / 270;
 
-  // Layout: separate graph zones like the reference image.
+  // Split layout inside the same v5.67 canvas size.
   const titleY = 34;
   const arrowY = 78;
-  const particleTop = 116;
-  const particleBottom = Math.round(h * 0.53);
-  const curveTop = particleBottom + 42;
+
+  const particleTop = 122;
+  const particleAxisY = Math.round(h * 0.52);
+  const particleBottom = particleAxisY - 22;
+
+  const curveTop = particleAxisY + 72;
   const curveBottom = h - 52;
   const curveMid = (curveTop + curveBottom) / 2;
-  const curveAmp = Math.max(48, (curveBottom - curveTop) * 0.42);
-  const axisY = curveMid;
+  const curveAmp = Math.max(42, (curveBottom - curveTop) * 0.40);
 
   // Speaker/source
   const speakerX = Math.max(66, xMin - 94);
   const speakerY = (particleTop + particleBottom) / 2;
-  drawSpeaker(ctx, speakerX, speakerY, 1.04);
+  drawSpeaker(ctx, speakerX, speakerY, 1.12);
 
   // Title
   ctx.fillStyle="#cfe9ff";
@@ -711,7 +713,7 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
   ctx.textAlign="left";
   ctx.fillText("Pressure Wave (คลื่นความดัน)", 24, titleY);
 
-  // Direction arrow above particle region
+  // Direction arrow
   ctx.save();
   ctx.strokeStyle="rgba(34,211,238,.96)";
   ctx.fillStyle="rgba(34,211,238,.96)";
@@ -731,62 +733,101 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
   ctx.fillText("ทิศทางการเคลื่อนที่ของคลื่น", w*0.57, arrowY-16);
   ctx.restore();
 
-  // Labels for pressure areas
+  // Shared observation line
   ctx.save();
-  ctx.font="bold 15px Sarabun, system-ui, sans-serif";
+  ctx.strokeStyle="rgba(255,255,255,.76)";
+  ctx.setLineDash([8,8]);
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(obsXBase, particleTop - 22);
+  ctx.lineTo(obsXBase, curveBottom + 4);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="rgba(255,255,255,.96)";
+  ctx.font="16px Sarabun, system-ui, sans-serif";
   ctx.textAlign="center";
-  const labelY = particleTop - 10;
-  const bandCenters=[xMin+54,xMin+214,xMin+382,xMin+550,xMin+718,xMin+880];
+  ctx.fillText("ตำแหน่งสังเกต", obsXBase, particleTop-28);
+  ctx.restore();
+
+  // Glow bands, matching Longitudinal v5.67 visual language
+  const bandCenters=[xMin+52,xMin+230,xMin+420,xMin+610,xMin+800];
   bandCenters.forEach((bx,i)=>{
+    const g=ctx.createLinearGradient(bx-60,0,bx+60,0);
     const high = i % 2 === 0;
-    const g=ctx.createLinearGradient(bx-52,0,bx+52,0);
     g.addColorStop(0,"rgba(0,0,0,0)");
     g.addColorStop(.5, high ? "rgba(34,211,238,.18)" : "rgba(168,85,247,.13)");
     g.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle=g;
-    ctx.fillRect(bx-64, particleTop-8, 128, particleBottom-particleTop+18);
-    if(bx < xMax-35){
-      ctx.fillStyle = high ? "rgba(125,235,255,.92)" : "rgba(210,185,255,.84)";
-      ctx.fillText(high ? "ความดันสูง" : "ความดันต่ำ", bx, labelY);
-    }
+    ctx.fillRect(bx-70, particleTop-20, 140, particleBottom-particleTop+40);
   });
-  ctx.restore();
 
-  // Particle density visualization:
-  // make dot density/size vary with pressure so it visually resembles compressions/rarefactions.
-  const rows = 7;
-  const rowGap = (particleBottom - particleTop) / (rows - 1);
-  const baseGap = Math.max(18, Math.min(24, w * 0.020));
-  const dotBase = Math.max(3.5, Math.min(5.2, rowGap * 0.18));
+  // Upper graph = Longitudinal v5.67 particle style.
+  const rows = 15;
+  const availableHeight = Math.max(180, particleBottom - particleTop);
+  const rowGap = availableHeight / (rows - 1);
+  const dotR = Math.max(10.5, Math.min(14.2, rowGap * 0.62));
+  const baseGap = Math.max(39, Math.min(48, w * 0.038));
+  const currentAmpPx = 16.5 * p.A;
+  const obsRow = Math.floor(rows/2);
+  let obsParticleX = obsXBase;
+  let obsParticleY = particleTop + obsRow * rowGap;
+
+  const baseXs=[];
+  for(let x=xMin; x<=xMax; x+=baseGap) baseXs.push(x);
+  if(!baseXs.some(v => Math.abs(v - obsXBase) < 0.5)) baseXs.push(obsXBase);
+  baseXs.sort((a,b)=>a-b);
 
   for(let row=0; row<rows; row++){
     const y = particleTop + row * rowGap;
-    for(let base=xMin; base<=xMax; base+=baseGap){
-      const pressure = 0.5 + 0.5 * Math.cos(k*(base-eqX)-phase);
-      // Dense high-pressure zones, sparse low-pressure zones.
-      const keepThreshold = 0.18 + (1-pressure) * 0.55;
-      const hash = Math.abs(Math.sin(base*12.9898 + row*78.233)) % 1;
-      if(hash < keepThreshold) continue;
-      const jitterX = (Math.sin(base*1.77 + row*3.1) * 5.5);
-      const jitterY = (Math.sin(base*0.81 + row*5.3) * 3.0);
-      const x = base + jitterX + Math.sin(k*(base-eqX)-phase) * 2.0;
-      const r = dotBase * (0.78 + pressure * 0.72);
-      drawParticleShadow(ctx,x,y+jitterY,r);
-      drawParticleSphere(ctx,x,y+jitterY,r,"cyan");
+    for(let i=0;i<baseXs.length;i++){
+      const base = baseXs[i];
+      const disp = currentAmpPx * Math.sin(k*(base-obsXBase)-phase);
+      const x = base + disp;
+      const isObs = row===obsRow && Math.abs(base-obsXBase) < 0.5;
+      if(isObs){
+        // Keep red particle exactly on observation x, linked to lower graph.
+        obsParticleX = obsXBase;
+        obsParticleY = y;
+        continue;
+      }
+      drawParticleShadow(ctx,x,y,dotR);
+      drawParticleSphere(ctx,x,y,dotR,"cyan");
     }
   }
 
-  // Separator line between particle-density graph and pressure graph
+  // Red observation particle above, linked with lower marker.
   ctx.save();
-  ctx.strokeStyle="rgba(148,163,184,.22)";
-  ctx.setLineDash([8,8]);
-  ctx.beginPath();
-  ctx.moveTo(xMin-36, particleBottom+22);
-  ctx.lineTo(xMax+10, particleBottom+22);
-  ctx.stroke();
+  drawParticleShadow(ctx,obsParticleX,obsParticleY,dotR+1.9);
+  drawParticleSphere(ctx,obsParticleX,obsParticleY,dotR+1.9,"red");
   ctx.restore();
 
-  // Pressure graph axes
+  // x-axis below particle field
+  ctx.save();
+  ctx.strokeStyle="rgba(255,245,220,.94)";
+  ctx.fillStyle="rgba(255,255,255,.94)";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(xMin-34, particleAxisY);
+  ctx.lineTo(w-46, particleAxisY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w-46, particleAxisY);
+  ctx.lineTo(w-61, particleAxisY-9);
+  ctx.moveTo(w-46, particleAxisY);
+  ctx.lineTo(w-61, particleAxisY+9);
+  ctx.stroke();
+  for(let i=0;i<14;i++){
+    const tx=(xMin-30)+i*((w-xMin-50)/(13));
+    ctx.beginPath();
+    ctx.moveTo(tx,particleAxisY-10);
+    ctx.lineTo(tx,particleAxisY+10);
+    ctx.stroke();
+  }
+  ctx.font="22px Sarabun, system-ui, sans-serif";
+  ctx.fillText("x", w-36, particleAxisY+30);
+  ctx.restore();
+
+  // Lower pressure graph axes
   ctx.save();
   ctx.strokeStyle="rgba(255,245,220,.96)";
   ctx.fillStyle="rgba(255,255,255,.96)";
@@ -794,17 +835,17 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
 
   // x-axis
   ctx.beginPath();
-  ctx.moveTo(xMin-34, axisY);
-  ctx.lineTo(w-46, axisY);
+  ctx.moveTo(xMin-34, curveMid);
+  ctx.lineTo(w-46, curveMid);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(w-46, axisY);
-  ctx.lineTo(w-61, axisY-9);
-  ctx.moveTo(w-46, axisY);
-  ctx.lineTo(w-61, axisY+9);
+  ctx.moveTo(w-46, curveMid);
+  ctx.lineTo(w-61, curveMid-9);
+  ctx.moveTo(w-46, curveMid);
+  ctx.lineTo(w-61, curveMid+9);
   ctx.stroke();
 
-  // pressure y-axis
+  // ΔP axis
   ctx.beginPath();
   ctx.moveTo(xMin-34, curveBottom);
   ctx.lineTo(xMin-34, curveTop);
@@ -816,13 +857,22 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
   ctx.lineTo(xMin-25, curveTop+15);
   ctx.stroke();
 
+  // zero dashed line
+  ctx.save();
+  ctx.strokeStyle="rgba(255,255,255,.62)";
+  ctx.setLineDash([6,7]);
+  ctx.beginPath();
+  ctx.moveTo(xMin-34, curveMid);
+  ctx.lineTo(w-58, curveMid);
+  ctx.stroke();
+  ctx.restore();
+
   // ticks
-  const tickCount=14;
-  for(let i=0;i<tickCount;i++){
-    const tx=(xMin-30)+i*((w-xMin-50)/(tickCount-1));
+  for(let i=0;i<14;i++){
+    const tx=(xMin-30)+i*((w-xMin-50)/(13));
     ctx.beginPath();
-    ctx.moveTo(tx,axisY-8);
-    ctx.lineTo(tx,axisY+8);
+    ctx.moveTo(tx,curveMid-8);
+    ctx.lineTo(tx,curveMid+8);
     ctx.stroke();
   }
   for(let j=-1;j<=1;j++){
@@ -834,9 +884,8 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
   }
 
   ctx.font="22px Sarabun, system-ui, sans-serif";
-  ctx.fillText("x", w-36, axisY+30);
+  ctx.fillText("x", w-36, curveMid+30);
 
-  // y-axis pressure label
   ctx.save();
   ctx.translate(xMin-78, curveMid);
   ctx.rotate(-Math.PI/2);
@@ -848,19 +897,19 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
 
   ctx.font="14px Sarabun, system-ui, sans-serif";
   ctx.textAlign="left";
-  ctx.fillText("+P", xMin-88, curveTop+6);
-  ctx.fillText("0", xMin-78, curveMid+5);
-  ctx.fillText("-P", xMin-88, curveBottom+4);
+  ctx.fillText("+ΔP", xMin-91, curveTop+6);
+  ctx.fillText("0", xMin-76, curveMid+5);
+  ctx.fillText("-ΔP", xMin-91, curveBottom+4);
   ctx.restore();
 
-  // Pressure sine curve
+  // Pressure curve
   const pts=[];
   for(let x=xMin; x<=xMax; x+=4){
-    const y = curveMid - Math.cos(k*(x-eqX)-phase) * curveAmp;
+    const y = curveMid - Math.cos(k*(x-obsXBase)-phase) * curveAmp;
     pts.push([x,y]);
   }
   ctx.save();
-  ctx.strokeStyle="rgba(74,222,128,.95)";
+  ctx.strokeStyle="rgba(74,222,128,.96)";
   ctx.lineWidth=4;
   ctx.shadowColor="rgba(74,222,128,.42)";
   ctx.shadowBlur=10;
@@ -869,21 +918,12 @@ function drawPressureWaveFinal(ctx, c, p, w, h){
   ctx.stroke();
   ctx.restore();
 
-  // Red observation marker on pressure curve
-  const obsX = eqX;
-  const obsY = curveMid - Math.cos(k*(obsX-eqX)-phase) * curveAmp;
+  // Red marker on lower graph exactly under the red observation particle.
+  const graphMarkerX = obsXBase;
+  const graphMarkerY = curveMid - Math.cos(k*(graphMarkerX-obsXBase)-phase) * curveAmp;
   ctx.save();
-  drawParticleShadow(ctx, obsX, obsY, 9);
-  drawParticleSphere(ctx, obsX, obsY, 9, "red");
-  ctx.restore();
-
-  // Small captions
-  ctx.save();
-  ctx.font="bold 16px Sarabun, system-ui, sans-serif";
-  ctx.fillStyle="rgba(207,233,255,.94)";
-  ctx.textAlign="left";
-  ctx.fillText("การกระจายตัวของอนุภาคอากาศ", xMin-34, particleTop-32);
-  ctx.fillText("กราฟความดัน", xMin-34, curveTop-16);
+  drawParticleShadow(ctx, graphMarkerX, graphMarkerY, 9.5);
+  drawParticleSphere(ctx, graphMarkerX, graphMarkerY, 9.5, "red");
   ctx.restore();
 }
 
@@ -908,7 +948,6 @@ function drawVisualizer(){
     return;
   }
 
-  // v5.68: Pressure Wave uses the same full-height mobile style as Longitudinal v5.67.
   if(mode==="pressure"){
     drawPressureWaveFinal(ctx,c,p,W,H);
     if(vizState.running) vizState.t += 1;
@@ -1319,11 +1358,10 @@ function resizeVisualizerCanvas(){
   const cssW = Math.max(280, Math.floor(rect.width - 4));
   const isLandscape = window.matchMedia("(orientation: landscape)").matches;
   const isLongitudinal = !!document.querySelector(".visualizerSinglePage[data-viz-mode='longitudinal']");
-  const isPressure = !!document.querySelector(".visualizerSinglePage[data-viz-mode='pressure']");
 
   let cssH;
-  if(isLongitudinal || isPressure){
-    // v5.68: force longitudinal/pressure graphs to fill the graph slot vertically on real phones.
+  if(isLongitudinal){
+    // v5.66: force graph to fill the graph slot vertically on real phones.
     // Portrait: graph height is based on viewport height, not just width.
     // This makes the particle region extend from near the title to near the player bar.
     const vh = Math.max(640, window.innerHeight || 800);

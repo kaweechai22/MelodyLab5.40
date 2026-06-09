@@ -2375,7 +2375,7 @@ main.wrap{
 /* No canvas-height change here: graph area intentionally remains the same size. */
 
 
-/* v5.68: apply v5.67 mobile graph format to Pressure Wave page */
+/* v5.72 Pressure page: use Longitudinal v5.67 structure and visual controls */
 .pressureFocusPage .vizMediaFrame canvas{
   aspect-ratio:auto !important;
   height:46vh !important;
