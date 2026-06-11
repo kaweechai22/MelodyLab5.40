@@ -68,19 +68,140 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
   let panel, cx, cy;
 
   if(mode==="soundReflection"){
-    const angle=vNum("vizAngle",35), freq=vNum("vizFreq",800); vText("vizAngleLabel",angle.toFixed(0)+"°"); vText("vizFreqLabel",freq.toFixed(0)+" Hz");
-    panel=corePanel(ctx,w,h,"Sound Reflection (การสะท้อนของเสียง)"); cx=w/2; cy=panel.y+panel.h*.52;
-    const wallX=panel.x+panel.w-210, hitY=cy, srcX=panel.x+145;
-    const theta=angle*Math.PI/180, L=wallX-srcX-75, dy=Math.tan(theta)*L*.55;
-    const inX=srcX+72, inY=hitY-dy, outX=srcX+72, outY=hitY+dy;
-    drawSpeaker(ctx,srcX,inY,.86); coreArcs(ctx,srcX,inY,9,28,"rgba(34,211,238,.72)",-.8,.8,(time*18)%28);
-    ctx.strokeStyle="rgba(255,255,255,.68)"; ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(wallX,panel.y+40); ctx.lineTo(wallX,panel.y+panel.h-40); ctx.stroke();
-    ctx.setLineDash([8,7]); ctx.strokeStyle="rgba(255,255,255,.72)"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(wallX-130,hitY); ctx.lineTo(wallX+105,hitY); ctx.stroke(); ctx.setLineDash([]);
-    coreArrow(ctx,inX,inY,wallX,hitY,"#22d3ee",4); coreArrow(ctx,wallX,hitY,outX,outY,"#ff5cab",4);
-    if(vizState.running){ const u=(time*.08)%1; coreDot(ctx,inX+(wallX-inX)*u,inY+(hitY-inY)*u,6,"#22d3ee"); coreDot(ctx,wallX+(outX-wallX)*u,hitY+(outY-hitY)*u,6,"#ff5cab"); }
-    ctx.fillStyle="#e8f5ff"; ctx.font="bold 16px Sarabun"; ctx.textAlign="center"; ctx.fillText("θᵢ = θᵣ",wallX-95,hitY+58); ctx.fillText("เส้นฉาก",wallX+75,hitY-12);
-    coreMetricCard(ctx,panel.x+38,panel.y+panel.h-100,210,76,"กฎการสะท้อน",`θᵢ = θᵣ = ${angle.toFixed(0)}°`,"วัดจากเส้นฉาก","#22d3ee");
+    const angle=vNum("vizAngle",25);
+    const freq=vNum("vizFreq",1000);
+    const amp=vNum("vizAmp",0.80);
+    const wallType=vSel("vizWallType","rigid");
+    const reflRatio = wallType==="rigid" ? 0.95 : 0.55;
+    vText("vizAngleLabel",angle.toFixed(0)+"°");
+    vText("vizFreqLabel",freq>=1000?(freq/1000).toFixed(2).replace(/\.00$/,"")+" kHz":freq.toFixed(0)+" Hz");
+    vText("vizAmpLabel",amp.toFixed(2));
+    vText("vizWallTypeLabel",wallType==="rigid"?"Rigid":"Soft");
+    panel=corePanel(ctx,w,h,"Sound Reflection (การสะท้อนของเสียง)");
 
+    // Layout coordinates: match the reference mockup with source left, wall right, normal and reflected ray.
+    const srcX=panel.x+105, srcY=panel.y+panel.h*0.40;
+    const wallX=panel.x+panel.w-150;
+    const hitY=panel.y+panel.h*0.48;
+    const rayLen=wallX-srcX-72;
+    const theta=angle*Math.PI/180;
+    const incidentY=hitY - Math.tan(theta)*rayLen*0.42;
+    const reflectedY=hitY + Math.tan(theta)*rayLen*0.42;
+    const inX=srcX+78, inY=incidentY;
+    const outX=srcX+210, outY=reflectedY;
+    const rayColor="#ff5cab", reflColor="#7cff7c";
+
+    // Speaker + expanding sound wavefronts.
+    drawSpeaker(ctx,srcX,srcY,0.95);
+    const waveShift=(time*38)%30;
+    ctx.save();
+    for(let i=0;i<14;i++){
+      const r=34+i*26+waveShift;
+      const alpha=lim(0.50-i*0.028,0.06,0.52)*amp;
+      ctx.strokeStyle=`rgba(0,170,255,${alpha})`;
+      ctx.lineWidth=2.1;
+      ctx.beginPath();
+      ctx.arc(srcX+6,srcY,r,-0.92,0.92);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Rigid/soft wall with hatch texture.
+    ctx.save();
+    const wallGrad=ctx.createLinearGradient(wallX-15,panel.y,wallX+24,panel.y);
+    wallGrad.addColorStop(0,"rgba(255,255,255,.12)");
+    wallGrad.addColorStop(.5,"rgba(255,255,255,.48)");
+    wallGrad.addColorStop(1,"rgba(255,255,255,.10)");
+    ctx.fillStyle=wallGrad;
+    roundRect(ctx,wallX-12,panel.y+40,34,panel.h-96,4);
+    ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.42)";
+    ctx.lineWidth=1.4;
+    for(let y=panel.y+46;y<panel.y+panel.h-55;y+=16){
+      ctx.beginPath();
+      ctx.moveTo(wallX-10,y+13);
+      ctx.lineTo(wallX+18,y-5);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Normal line.
+    ctx.save();
+    ctx.setLineDash([7,7]);
+    ctx.strokeStyle="rgba(255,255,255,.70)";
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(wallX-165,hitY); ctx.lineTo(wallX+75,hitY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#e8f5ff";
+    ctx.font="bold 13px Sarabun, system-ui";
+    ctx.textAlign="center";
+    ctx.fillText("Normal",wallX-116,hitY-84);
+    ctx.font="12px Sarabun, system-ui";
+    ctx.fillText("(เส้นตั้งฉาก)",wallX-116,hitY-66);
+    ctx.restore();
+
+    // Incident and reflected rays.
+    coreArrow(ctx,inX,inY,wallX,hitY,rayColor,3.5);
+    coreArrow(ctx,wallX,hitY,outX,outY,reflColor,3.5);
+
+    // Moving energy packets along both ray paths.
+    if(vizState.running){
+      const u=(time*0.11)%1;
+      coreDot(ctx,inX+(wallX-inX)*u,inY+(hitY-inY)*u,5+amp*2,rayColor);
+      coreDot(ctx,wallX+(outX-wallX)*u,hitY+(outY-hitY)*u,5+amp*2,reflColor);
+    }else{
+      coreDot(ctx,wallX,hitY,6,rayColor);
+    }
+
+    // Angle arcs.
+    ctx.save();
+    ctx.strokeStyle="rgba(255,160,210,.88)";
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(wallX,hitY,56,Math.PI,Math.PI+theta); ctx.stroke();
+    ctx.beginPath(); ctx.arc(wallX,hitY,83,Math.PI-theta,Math.PI); ctx.stroke();
+    ctx.fillStyle="#ff91c8";
+    ctx.font="bold 18px Sarabun, system-ui";
+    ctx.textAlign="center";
+    ctx.fillText("θᵢ",wallX-78,hitY-18);
+    ctx.fillText("θᵣ",wallX-78,hitY+48);
+    ctx.restore();
+
+    // Text labels like the reference mockup.
+    ctx.save();
+    ctx.font="bold 14px Sarabun, system-ui";
+    ctx.textAlign="left";
+    ctx.fillStyle=rayColor;
+    ctx.fillText("Incident Ray",inX+55,inY-28);
+    ctx.font="12px Sarabun, system-ui";
+    ctx.fillText("(รังสีตกกระทบ)",inX+55,inY-12);
+    ctx.fillStyle=reflColor;
+    ctx.font="bold 14px Sarabun, system-ui";
+    ctx.fillText("Reflected Ray",outX+54,outY+3);
+    ctx.font="12px Sarabun, system-ui";
+    ctx.fillText("(รังสีสะท้อน)",outX+54,outY+19);
+    ctx.fillStyle="#e8f5ff";
+    ctx.font="bold 13px Sarabun, system-ui";
+    ctx.fillText(wallType==="rigid"?"Rigid Wall":"Absorbing Wall",wallX+46,hitY-10);
+    ctx.font="12px Sarabun, system-ui";
+    ctx.fillText(wallType==="rigid"?"(ผนังแข็ง)":"(ดูดซับบางส่วน)",wallX+46,hitY+9);
+    ctx.restore();
+
+    // Formula badge and reflection strength.
+    ctx.save();
+    const bx=panel.x+180, by=panel.y+panel.h-110;
+    ctx.fillStyle="rgba(7,18,38,.82)";
+    ctx.strokeStyle="rgba(88,166,255,.35)";
+    ctx.lineWidth=1.3;
+    roundRect(ctx,bx,by,270,72,14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#e8f5ff";
+    ctx.font="bold 24px Sarabun, system-ui";
+    ctx.textAlign="center";
+    ctx.fillText("θᵢ = θᵣ",bx+135,by+31);
+    ctx.font="13px Sarabun, system-ui";
+    ctx.fillText("มุมตกกระทบ = มุมสะท้อน",bx+135,by+54);
+    ctx.restore();
+
+    coreMetricCard(ctx,panel.x+panel.w-345,panel.y+panel.h-112,250,80,"Reflection Strength",`${Math.round(reflRatio*100)}%`,"ขึ้นกับชนิดผนังและแอมพลิจูด","#7cff7c");
   } else if(mode==="soundRefraction"){
     const dT=vNum("vizTempDiff",15), angle=vNum("vizAngle",25); vText("vizTempDiffLabel",dT.toFixed(0)+" °C"); vText("vizAngleLabel",angle.toFixed(0)+"°");
     panel=corePanel(ctx,w,h,"Sound Refraction (การหักเหของเสียง)"); cx=w/2; cy=panel.y+panel.h*.50;
@@ -2037,7 +2158,7 @@ function initVisualizer(){
       vizState.mode=btn.dataset.viz;
     };
   });
-  ["vizFreq","vizFreq2","vizAmp","vizSpeed","vizTimeSpeed","vizPhase","vizPhaseDiff","vizSubMode","vizDistance","vizTemp","vizAngle","vizTempDiff","vizSlit","vizSeparation","vizTubeMode","vizLength","vizMach","vizPower","vizIntensity","vizLevel","vizSourceLevel","vizProtection","vizAppCategory","vizInstrument","vizHarmonicMix"].forEach(id=>{
+  ["vizFreq","vizFreq2","vizAmp","vizSpeed","vizTimeSpeed","vizPhase","vizPhaseDiff","vizSubMode","vizDistance","vizTemp","vizAngle","vizTempDiff","vizSlit","vizSeparation","vizTubeMode","vizLength","vizMach","vizPower","vizIntensity","vizLevel","vizSourceLevel","vizProtection","vizAppCategory","vizInstrument","vizHarmonicMix","vizWallType"].forEach(id=>{
     const el=$(id);
     if(!el) return;
     const handler=()=>{ getVizParams(); if(typeof drawVisualizer === "function") drawVisualizer(); };
